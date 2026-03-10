@@ -9,7 +9,6 @@ cmake_install.cmake
 # Compiled binary files and libraries
 *.o
 *.so
-*.a
 *.out
 task_space_controller # Your executable file
 
