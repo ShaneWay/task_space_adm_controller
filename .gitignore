@@ -1,0 +1,17 @@
+# CMake generated build directories and files
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.cmake
+
+# Compiled binary files and libraries
+*.o
+*.so
+*.a
+*.out
+task_space_controller # Your executable file
+
+
+
