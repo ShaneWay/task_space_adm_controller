@@ -141,12 +141,13 @@ bool example_angular_action_movement(k_api::Base::BaseClient* base)
 
     auto actuator_count = base->GetActuatorCount();
 
+    float exp_start_angle[] = {0.073, 28.099, 179.942, 281.407, 359.992, 286.364, 180.197};
     // Arm straight up
     for (size_t i = 0; i < actuator_count.count(); ++i) 
     {
         auto joint_angle = joint_angles->add_joint_angles();
         joint_angle->set_joint_identifier(i);
-        joint_angle->set_value(0);
+        joint_angle->set_value(exp_start_angle[i]);
     }
 
     // Connect to notification action topic
@@ -269,7 +270,7 @@ int main(int argc, char **argv)
     // Example core
     bool success = true;
     success &= example_move_to_home_position(base);
-    success &= example_cartesian_action_movement(base, base_cyclic);
+    // success &= example_cartesian_action_movement(base, base_cyclic);
     success &= example_angular_action_movement(base);
 
     // You can also refer to the 110-Waypoints examples if you want to execute

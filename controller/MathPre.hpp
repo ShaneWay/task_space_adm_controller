@@ -6,6 +6,7 @@
 #include <pinocchio/multibody/data.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 #include <pinocchio/algorithm/jacobian.hpp>
+#include <pinocchio/algorithm/frames.hpp>
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -81,16 +82,16 @@ namespace MathPre {
     inline Eigen::MatrixXd jacobian(const pinocchio::Model& model, 
                                     pinocchio::Data& data, 
                                     const Eigen::VectorXd& q, 
-                                    pinocchio::JointIndex joint_id) {
+                                    pinocchio::FrameIndex frame_id) {
         // Update kinematics and compute Jacobians for all joints
         pinocchio::computeJointJacobians(model, data, q);
-        
+        pinocchio::updateFramePlacements(model, data);
         Eigen::MatrixXd J(6, model.nv);
         J.setZero();
         
         // Extract the Jacobian of the specific joint; LOCAL_WORLD_ALIGNED is recommended 
         // for its intuitive physical meaning in operational space control.
-        pinocchio::getJointJacobian(model, data, joint_id, pinocchio::LOCAL_WORLD_ALIGNED, J);
+        pinocchio::computeFrameJacobian(model, data, q, frame_id, pinocchio::LOCAL_WORLD_ALIGNED, J);
         return J;
     }
 
@@ -108,15 +109,17 @@ namespace MathPre {
                                                   pinocchio::Data& data, 
                                                   const Eigen::VectorXd& q, 
                                                   const Eigen::VectorXd& v, 
-                                                  pinocchio::JointIndex joint_id) {
+                                                  pinocchio::FrameIndex frame_id) {
         // Update kinematics including velocity and compute dJ
+        pinocchio::computeJointJacobians(model, data, q);
+        pinocchio::updateFramePlacements(model, data);
+
         pinocchio::computeJointJacobiansTimeVariation(model, data, q, v);
-        
         Eigen::MatrixXd dJ(6, model.nv);
         dJ.setZero();
         
         // Extract dJ for the specific joint
-        pinocchio::getJointJacobianTimeVariation(model, data, joint_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ);
+        pinocchio::getFrameJacobianTimeVariation(model, data, frame_id, pinocchio::LOCAL_WORLD_ALIGNED, dJ);
         return dJ;
     }
 

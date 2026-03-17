@@ -10,7 +10,11 @@ public:
     Eigen::VectorXd q_s; 
     Eigen::VectorXd u_s; 
     pinocchio::SE3 p_s;  
-    Eigen::Matrix<double, 6, 1> v_s; 
+    Eigen::VectorXd tau_s;
+    Eigen::VectorXd tau;
+
+    Eigen::VectorXd tau_ext;
+    Eigen::Matrix<double, 6, 1> v_s;
 
     // ================== Task-Space Proxy States ==================
     pinocchio::SE3 p_x;      
@@ -39,6 +43,9 @@ public:
     void initSizes(int nv) {
         q_s.setZero(nv);
         u_s.setZero(nv);
+        tau_s.setZero(nv);
+        tau.setZero(nv);
+        tau_ext.setZero(nv);
         q_x.setZero(nv);
         q_x_prv.setZero(nv);
         u_x.setZero(nv);

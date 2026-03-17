@@ -92,9 +92,15 @@ foreach ( SRC_FILE ${EXE_LIST} )
 
   add_executable(${TARGET_EXE_NAME} src/${SRC_FILE} 
                     ./utility/utilities.cpp
-                    ./controller/Controller.cpp
-                    ./controller/ControlLogger.cpp
                     )
+
+  if(TARGET_EXE_NAME MATCHES "^01")
+      target_sources(${TARGET_EXE_NAME} PRIVATE
+          ./controller/Controller.cpp
+          ./controller/ControlLogger.cpp
+      )
+  endif()
+
   target_include_directories(${TARGET_EXE_NAME} PUBLIC ${Python3_INCLUDE_DIRS})
   target_include_directories(${TARGET_EXE_NAME} PUBLIC ${Python3_NumPy_INCLUDE_DIRS})
 
@@ -105,6 +111,7 @@ foreach ( SRC_FILE ${EXE_LIST} )
                   pinocchio::pinocchio # Linked Pinocchio here
                   Eigen3::Eigen        # Modern CMake linking for Eigen
                   stdc++fs
+                  pthread
   )   
 
     if(Python3_NumPy_FOUND)

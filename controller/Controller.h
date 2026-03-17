@@ -4,44 +4,57 @@
 #include <Eigen/Dense>
 #include <pinocchio/multibody/model.hpp>
 #include <pinocchio/multibody/data.hpp>
+#include <string> 
 #include "MathPre.hpp" 
 #include "ControlState.h"
 #include "BaseParam.h"
 
 class AdmittanceController {
 public:
-    // Constructor: Now only requires the robot model and the BaseParam parameter class
-    AdmittanceController(const pinocchio::Model& model, const BaseParam& params);
+    // Constructor: Now ONLY requires the BaseParam parameter class
+    AdmittanceController(const BaseParam& params);
 
-    // Initialize the state (initializes _prv variables by passing the state reference)
-    void init(ControlState& state);
+    // Initialize the state (allocates vectors, sets references, and initializes proxy variables)
+    void init(ControlState& state, const Eigen::VectorXd& q_init, const Eigen::VectorXd& u_init, const Eigen::VectorXd& tau_init);
+
+    void printParams(ControlState& state);
 
     // Main control loop update function
-    // state: Contains all measured feedback states and the proxy states to be updated
-    // tau_s: Currently measured external joint torque
-    // Returns: Calculated desired joint torque tau_m (command sent to the motors)
-    Eigen::VectorXd update(ControlState& state, const Eigen::VectorXd& tau_s);
+    Eigen::VectorXd update(ControlState& state);
+
+    int print_cnt;
 
 private:
+    int frame;
+
     pinocchio::Model model_;
     pinocchio::Data data_;
     BaseParam params_; // Stores system parameters
     
-    // Intermediate variables, kept within the class, no need to expose to the external State
+    // Intermediate variables
     Eigen::VectorXd q_x_star;
     Eigen::VectorXd u_x_star;
+
+    // Joint Unwrap Variables (to prevent 360-degree jumps)
+    Eigen::VectorXd q_raw_prv_;
+    Eigen::VectorXd q_offset_;
     
     // Assuming we are controlling the end-effector, the Frame ID is determined at initialization
-    const int EE_FRAME_ID = 1; 
-    const pinocchio::JointIndex EE_JOINT_ID = 1; 
+    pinocchio::FrameIndex EE_FRAME_ID;
+    pinocchio::JointIndex EE_JOINT_ID; 
 
     // ================== Internal Algorithm Functions ==================
-    // Passes the state reference to directly read and modify internal state data
-    void computeTwoProxies(ControlState& state, const Eigen::VectorXd& tau_s);
-    
-    Eigen::VectorXd computeSatPosCtrl(ControlState& state);
+    // Helper function to safely load URDF before initializing pinocchio::Data
+    static pinocchio::Model loadModelFromUrdf(const std::string& urdf_path);
 
-    // Continualized pseudoinverse algorithm
+    // Helper to unwrap joint angles and maintain continuous trajectories
+    Eigen::VectorXd unwrapJointAngles(const Eigen::VectorXd& q_raw);
+
+    // Computes the gravity compensation torque vector
+    Eigen::VectorXd computeGravity(const Eigen::VectorXd& q_s);
+
+    void computeTwoProxies(ControlState& state);
+    Eigen::VectorXd computeSatPosCtrl(ControlState& state);
     Eigen::MatrixXd continualizedPseudoInverse(const Eigen::MatrixXd& A, double epsilon = 0.03);
 };
 
