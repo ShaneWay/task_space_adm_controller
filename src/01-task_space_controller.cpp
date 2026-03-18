@@ -176,6 +176,7 @@ bool example_admittance_control(k_api::Base::BaseClient* base,
 
     ControlLogger logger;
     logger.init(params.nv);
+    logger.setLogDirectory(params.config_name);
 
     // ==========================================================
     // 2. Clear Faults and Prepare Hardware

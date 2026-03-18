@@ -13,16 +13,16 @@ nv: 7
 # ==========================================
 # Dimension: 6D (3 translation + 3 rotation), diagonal matrices are represented as 1D arrays
 # M_T: blockdiag[(2.5 kg)*I_3, (0.25 kg*m^2)*I_3]
-M_T: [2.5, 2.5, 2.5, 0.25, 0.25, 0.25]
+M_T: [2500, 2500, 2500, 250, 250, 250]
 
 # B_T: (4 s^-1) * M_T
-B_T: [10.0, 10.0, 10.0, 1.0, 1.0, 1.0]
+B_T: [10000, 10000, 10000, 1000, 1000, 1000]
 
 # K_T: (4 s^-2) * M_T
-K_T: [10.0, 10.0, 10.0, 1.0, 1.0, 1.0]
+K_T: [10000, 10000, 10000, 1000, 1000, 1000]
 
 # F_T: [100 N, 10 Nm] (Spring force limits for translation and rotation)
-F_T: [100.0, 10.0]
+F_T: [100000.0, 10000.0]
 
 # ==========================================
 # Joint Space Parameters 
@@ -70,3 +70,12 @@ p_r: [0.5, 0.0, 0.4, 0.0, 0.0, 1.0, 0.0]
 
 # Task space reference force (6D: 3 translation, 3 rotation)
 f_r: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+# ==========================================
+# Trajectory Parameters (Experiment III)
+# ==========================================
+# Starting pose p_rA for the Experiment III trajectory
+p_rA: [0.5, 0.0, 0.4, 0.0, 0.0, 1.0, 0.0]
+
+# Target pose p_rB for the Experiment III trajectory
+p_rB: [0.6, -0.4, 0.2, 0.0, 0.0, 1.0, 0.0]

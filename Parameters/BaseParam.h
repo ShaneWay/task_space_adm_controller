@@ -7,9 +7,13 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <filesystem>
 
 class BaseParam {
 public:
+
+    std::string config_name;
+
     // ================== Core Parameters ==================
     std::string urdf_path; // Path to the robot URDF file
     double T; // Sampling period
@@ -31,16 +35,41 @@ public:
     pinocchio::SE3 p_r;  // Task space reference pose
     Eigen::VectorXd f_r; // Task space reference force (6D)
 
+    // Start and target poses for trajectory generation
+    pinocchio::SE3 p_rA; 
+    pinocchio::SE3 p_rB;
+
     // Default constructor: provides safe default values
     BaseParam() : T(0.001), nv(7) {
         p_r.setIdentity(); // Initialize to identity transform
         f_r = Eigen::VectorXd::Zero(6); // Default to zero force
+        p_rA.setIdentity(); // Initialize
+        p_rB.setIdentity(); // Initialize
     }
 
     // Core interface: load parameters from a YAML file
     bool loadFromYaml(const std::string& filepath) {
         try {
             YAML::Node config = YAML::LoadFile(filepath);
+            std::string actual_filepath = filepath;
+
+            if (config["selected_config"]) {
+                std::string sub_config = config["selected_config"].as<std::string>();
+                std::filesystem::path master_path(filepath);
+                
+                // Assuming the sub-yaml file and config.yaml are in the same directory
+                actual_filepath = (master_path.parent_path() / sub_config).string();
+                
+                // Extract the filename without extension, e.g., "config1A"
+                config_name = std::filesystem::path(sub_config).stem().string(); 
+                
+                // Reload the corresponding sub-configuration file
+                config = YAML::LoadFile(actual_filepath);
+                std::cout << "[INFO] Nested config detected. Loading sub-config: " << actual_filepath << "\n";
+            } else {
+                // If a sub-configuration is loaded directly, extract its name as well
+                config_name = std::filesystem::path(filepath).stem().string();
+            }
 
             // Load URDF path
             if (config["urdf_path"]) {
@@ -65,6 +94,20 @@ public:
             auto loadDiagonalMatrix = [&](const YAML::Node& node) -> Eigen::MatrixXd {
                 Eigen::VectorXd diag = loadVectorXd(node);
                 return diag.asDiagonal();
+            };
+
+            // NEW Helper lambda: parse SE3 pose from a YAML node
+            auto parseSE3 = [&](const YAML::Node& node, pinocchio::SE3& target_pose, const std::string& name) {
+                if (node) {
+                    std::vector<double> vec = node.as<std::vector<double>>();
+                    if (vec.size() == 7) {
+                        Eigen::Vector3d translation(vec[0], vec[1], vec[2]);
+                        Eigen::Quaterniond quat(vec[3], vec[4], vec[5], vec[6]);
+                        target_pose = pinocchio::SE3(quat.normalized().toRotationMatrix(), translation);
+                    } else {
+                        std::cerr << "Warning: " << name << " size in YAML is not 7.\n";
+                    }
+                }
             };
 
             // Load task space parameters
@@ -95,18 +138,10 @@ public:
             q_r = loadVectorXd(config["q_r"]);
             f_r = loadVectorXd(config["f_r"]);
             
-            // Parse Task Space Reference Pose (p_r)
-            std::vector<double> pr_vec = config["p_r"].as<std::vector<double>>();
-            if (pr_vec.size() == 7) {
-                Eigen::Vector3d translation(pr_vec[0], pr_vec[1], pr_vec[2]);
-                // Eigen::Quaterniond constructor takes (w, x, y, z)
-                Eigen::Quaterniond quat(pr_vec[3], pr_vec[4], pr_vec[5], pr_vec[6]);
-                
-                // Construct SE3 from translation and normalized quaternion
-                p_r = pinocchio::SE3(quat.normalized().toRotationMatrix(), translation);
-            } else {
-                std::cerr << "Warning: p_r size in YAML is not 7.\n";
-            }
+            // Use the newly written parseSE3 lambda to parse p_r, p_rA, and p_rB
+            parseSE3(config["p_r"], p_r, "p_r");
+            parseSE3(config["p_rA"], p_rA, "p_rA");
+            parseSE3(config["p_rB"], p_rB, "p_rB");
 
             return true;
         } catch (const YAML::Exception& e) {

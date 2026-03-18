@@ -7,6 +7,7 @@
 
 class ControlLogger {
 private:
+    std::string log_dir_ = "./";
     std::vector<double> time_; // Time axis
 
     // Joint space variables
@@ -25,6 +26,7 @@ private:
     std::vector<std::vector<double>> p_s_; 
     std::vector<std::vector<double>> v_s_;
     std::vector<std::vector<double>> p_r_; 
+    std::vector<std::vector<double>> f_s_; // Log for Task-space measured force
 
 public:
     // Initialization and data logging interfaces
@@ -36,6 +38,8 @@ public:
 
     // Interface to save all key data to a txt/csv file
     void saveToTxt(const std::string& filename) const;
+
+    void setLogDirectory(const std::string& config_name);
 
     // Getters
     const std::vector<double>& getTime() const { return time_; }

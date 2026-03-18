@@ -3,8 +3,10 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <filesystem>
 
 namespace plt = matplotlibcpp;
+namespace fs = std::filesystem;
 
 void ControlLogger::init(int nv) {
     q_s_.assign(nv, std::vector<double>());
@@ -22,6 +24,8 @@ void ControlLogger::init(int nv) {
     p_r_.assign(3, std::vector<double>());
     v_x_.assign(6, std::vector<double>());
     v_s_.assign(6, std::vector<double>());
+
+    f_s_.assign(6, std::vector<double>());
 }
 
 void ControlLogger::log(double t, const ControlState& state) {
@@ -49,14 +53,25 @@ void ControlLogger::log(double t, const ControlState& state) {
     for (int i = 0; i < 6; ++i) {
         v_x_[i].push_back(state.v_x(i));
         v_s_[i].push_back(state.v_s(i));
+        f_s_[i].push_back(state.f_s(i));
     }
+}
+
+void ControlLogger::setLogDirectory(const std::string& config_name) {
+    // You can customize the root folder name; here we use "results/" as the root directory
+    log_dir_ = "results/" + config_name + "/"; 
+    if (!fs::exists(log_dir_)) {
+        fs::create_directories(log_dir_);
+    }
+    std::cout << "[INFO] Log directory set to: " << log_dir_ << std::endl;
 }
 
 // Core function: Export to a comma-separated text file
 void ControlLogger::saveToTxt(const std::string& filename) const {
-    std::ofstream outFile(filename);
+    std::string full_path = log_dir_ + filename;
+    std::ofstream outFile(full_path);
     if (!outFile.is_open()) {
-        std::cerr << "[ERROR] Cannot open file to save logs: " << filename << std::endl;
+        std::cerr << "[ERROR] Cannot open file to save logs: " << full_path << std::endl;
         return;
     }
 
@@ -73,7 +88,8 @@ void ControlLogger::saveToTxt(const std::string& filename) const {
     for (int i = 0; i < 3; ++i) outFile << ",p_s_" << i;
     for (int i = 0; i < 3; ++i)  outFile << ",p_x_" << i;  // px: Task space translation
     for (int i = 0; i < 3; ++i)  outFile << ",p_r_" << i;
-    for (int i = 0; i < 6; ++i)  outFile << ",v_x_" << i;  // vx: Task space velocity
+    for (int i = 0; i < 6; ++i)  outFile << ",v_x_" << i;
+    for (int i = 0; i < 6; ++i)  outFile << ",f_s_" << i;  // vx: Task space velocity
     outFile << "\n";
 
     // 2. Write data for each frame row by row
@@ -89,11 +105,12 @@ void ControlLogger::saveToTxt(const std::string& filename) const {
         for (int i = 0; i < 3; ++i)  outFile << "," << p_x_[i][t];
         for (int i = 0; i < 3; ++i)  outFile << "," << p_r_[i][t];
         for (int i = 0; i < 6; ++i)  outFile << "," << v_x_[i][t];
+        for (int i = 0; i < 6; ++i)  outFile << "," << f_s_[i][t];
         outFile << "\n";
     }
 
     outFile.close();
-    std::cout << "[SUCCESS] Control data has been successfully saved to: " << filename << std::endl;
+    std::cout << "[SUCCESS] Control data has been successfully saved to: " << full_path << std::endl;
 }
 
 void ControlLogger::plot(int target_joint) const {
@@ -127,7 +144,7 @@ void ControlLogger::plot(int target_joint) const {
     plt::legend();
     plt::grid(true);
 
-    plt::save("Task_Space_Position_Comparison.pdf");
+    plt::save(log_dir_ +"Task_Space_Position_Comparison.pdf");
     // ----------------------------------------------------
     // Figure 2: All Joints Command Torque (tau)
     // ----------------------------------------------------
@@ -143,7 +160,7 @@ void ControlLogger::plot(int target_joint) const {
     plt::ylabel("Torque [Nm]");
     plt::legend(); 
     plt::grid(true);
-    plt::save("All_Joints_Command_Torque.pdf");
+    plt::save(log_dir_ +"All_Joints_Command_Torque.pdf");
     // Block and show all plotted figures
     // plt::show();
 
@@ -159,7 +176,7 @@ void ControlLogger::plot(int target_joint) const {
     plt::ylabel("Torque [Nm]");
     plt::legend(); 
     plt::grid(true);
-    plt::save("All_Joints_External_Torque.pdf");
+    plt::save(log_dir_ +"All_Joints_External_Torque.pdf");
     // Block and show all plotted figures
     // plt::show();
 
@@ -175,7 +192,24 @@ void ControlLogger::plot(int target_joint) const {
     plt::ylabel("Torque [Nm]");
     plt::legend(); 
     plt::grid(true);
-    plt::save("All_Joints_Measrued_Torque.pdf");
+    plt::save(log_dir_ +"All_Joints_Measrued_Torque.pdf");
     // Block and show all plotted figures
     // plt::show();
+    // ----------------------------------------------------
+    // Figure 5: Task Space Measured Force (f_s)
+    // ----------------------------------------------------
+    plt::figure();
+    std::vector<std::string> colors_fs = {"red", "green", "blue", "orange", "purple", "brown"};
+    std::vector<std::string> labels_fs = {"F_x", "F_y", "F_z", "M_x", "M_y", "M_z"};
+    
+    for (int i = 0; i < 6; ++i) {
+        plt::plot(time_, f_s_[i], {{"label", labels_fs[i]}, {"color", colors_fs[i]}});
+    }
+    
+    plt::title("Task Space Measured Force (f_s)");
+    plt::xlabel("Time [s]");
+    plt::ylabel("Force [N] / Torque [Nm]");
+    plt::legend(); 
+    plt::grid(true);
+    plt::save(log_dir_ + "Task_Space_Measured_Force.pdf");
 }
