@@ -344,7 +344,7 @@ bool example_admittance_control(k_api::Base::BaseClient* base,
 
         std::cout << "\nAdmittance Control Test Completed." << std::endl;
         logger.saveToTxt("control_log_data.csv");
-        logger.saveToTxt("control_log_data_2.txt");
+        logger.saveToTxt("control_log_data.txt");
 
         // Restore actuators to POSITION mode
         control_mode_message.set_control_mode(k_api::ActuatorConfig::ControlMode::POSITION);

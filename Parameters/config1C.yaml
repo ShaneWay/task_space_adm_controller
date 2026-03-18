@@ -1,0 +1,72 @@
+# ==========================================
+# Core Parameters
+# ==========================================
+# Path to the robot URDF file (relative to the executable or absolute path)
+urdf_path: "../urdf/GEN3_URDF_V12.urdf"
+# Control period (T = 0.001 s)
+timestep: 0.001
+# Degrees of freedom of the manipulator (Kinova Gen3)
+nv: 7
+
+# ==========================================
+# Task Space Parameters 
+# ==========================================
+# Dimension: 6D (3 translation + 3 rotation), diagonal matrices are represented as 1D arrays
+# M_T: blockdiag[(2.5 kg)*I_3, (0.25 kg*m^2)*I_3]
+M_T: [2500, 2500, 2500, 0.25, 0.25, 0.25]
+
+# B_T: (4 s^-1) * M_T
+B_T: [10000, 10000, 10000, 1.0, 1.0, 1.0]
+
+# K_T: (4 s^-2) * M_T
+K_T: [10000, 10000, 10000, 1.0, 1.0, 1.0]
+
+# F_T: [100 N, 10 Nm] (Spring force limits for translation and rotation)
+F_T: [100.0, 10.0]
+
+# ==========================================
+# Joint Space Parameters 
+# ==========================================
+# Dimension: nv = 7, diagonal matrices are represented as 1D arrays
+# M: diag[1.5, 1.2, 0.8, 0.8, 0.4, 0.4, 0.4] kg*m^2
+M: [1.5, 1.2, 0.8, 0.8, 0.4, 0.4, 0.4]
+
+# B: (2 s^-1) * M
+B: [3.0, 2.4, 1.6, 1.6, 0.8, 0.8, 0.8]
+
+# K: (1 s^-2) * M
+K: [1.5, 1.2, 0.8, 0.8, 0.4, 0.4, 0.4]
+
+# F: [30, 30, 30, 30, 20, 20, 20] Nm (Spring force limits for joint space)
+F: [30.0, 30.0, 30.0, 30.0, 20.0, 20.0, 20.0]
+
+# ==========================================
+# SatPosCtrl Parameters (Saturated Position Controller)
+# ==========================================
+# Dimension: nv = 7
+# First four joints K_c=1500, last three joints K_c=1000
+K_c: [1500.0, 1500.0, 1500.0, 1500.0, 1000.0, 1000.0, 1000.0]
+
+# First four joints B_c=30, last three joints B_c=20
+B_c: [30.0, 30.0, 30.0, 30.0, 20.0, 20.0, 20.0]
+
+# First four joints L_c=300, last three joints L_c=200
+L_c: [300.0, 300.0, 300.0, 300.0, 200.0, 200.0, 200.0]
+
+# Joint torque saturation limits F_c (80% of maximum torque)
+# First four joints 43.2 Nm, last three joints 27.2 Nm
+F_c: [43.2, 43.2, 43.2, 43.2, 27.2, 27.2, 27.2]
+
+# ==========================================
+# Reference Parameters 
+# ==========================================
+# Joint space reference position (rad), Dimension: nv = 7
+# q_r: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+q_r: [0.00127, 0.49042, 3.14058, 4.91148, 6.28305, 4.99799, 3.14503]
+
+# Task space reference pose [x, y, z, qw, qx, qy, qz]
+# The quaternion order follows the paper: [w, x, y, z]
+p_r: [0.5, 0.0, 0.4, 0.0, 0.0, 1.0, 0.0]
+
+# Task space reference force (6D: 3 translation, 3 rotation)
+f_r: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
