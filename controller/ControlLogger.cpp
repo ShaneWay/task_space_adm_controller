@@ -26,6 +26,7 @@ void ControlLogger::init(int nv) {
     v_s_.assign(6, std::vector<double>());
 
     f_s_.assign(6, std::vector<double>());
+    f_r_.assign(6, std::vector<double>());
 }
 
 void ControlLogger::log(double t, const ControlState& state) {
@@ -54,6 +55,7 @@ void ControlLogger::log(double t, const ControlState& state) {
         v_x_[i].push_back(state.v_x(i));
         v_s_[i].push_back(state.v_s(i));
         f_s_[i].push_back(state.f_s(i));
+        f_r_[i].push_back(state.f_r(i));
     }
 }
 
@@ -106,6 +108,7 @@ void ControlLogger::saveToTxt(const std::string& filename) const {
         for (int i = 0; i < 3; ++i)  outFile << "," << p_r_[i][t];
         for (int i = 0; i < 6; ++i)  outFile << "," << v_x_[i][t];
         for (int i = 0; i < 6; ++i)  outFile << "," << f_s_[i][t];
+        for (int i = 0; i < 6; ++i)  outFile << "," << f_r_[i][t];
         outFile << "\n";
     }
 
@@ -195,21 +198,37 @@ void ControlLogger::plot(int target_joint) const {
     plt::save(log_dir_ +"All_Joints_Measrued_Torque.pdf");
     // Block and show all plotted figures
     // plt::show();
+    
     // ----------------------------------------------------
-    // Figure 5: Task Space Measured Force (f_s)
+    // Figure 5: Task Space Translational Force Tracking
     // ----------------------------------------------------
     plt::figure();
-    std::vector<std::string> colors_fs = {"red", "green", "blue", "orange", "purple", "brown"};
-    std::vector<std::string> labels_fs = {"F_x", "F_y", "F_z", "M_x", "M_y", "M_z"};
+    std::vector<std::string> colors_f = {"red", "green", "blue"};
     
-    for (int i = 0; i < 6; ++i) {
-        plt::plot(time_, f_s_[i], {{"label", labels_fs[i]}, {"color", colors_fs[i]}});
+    // Labels for Measured Forces
+    std::vector<std::string> labels_fs = {"F_s_x (Measured)", "F_s_y (Measured)", "F_s_z (Measured)"};
+    // Labels for Reference Forces (Steps: f_r1, f_r2, f_r3)
+    std::vector<std::string> labels_fr = {"F_r_x (Reference)", "F_r_y (Reference)", "F_r_z (Reference)"};
+
+    // Only iterate up to 3 to plot F_x, F_y, F_z (ignore torques M_x, M_y, M_z)
+    for (int i = 0; i < 3; ++i) {
+        // Plot measured force f_s (Solid line)
+        plt::plot(time_, f_s_[i], {{"label", labels_fs[i]}, {"color", colors_f[i]}, {"linestyle", "-"}});
+        
+        // Plot reference force f_r (Dashed line)
+        // Since f_r changes dynamically via updateExperimentIVForce, 
+        // this will naturally show the steps (0 -> f_r1 -> f_r2 -> f_r3)
+        plt::plot(time_, f_r_[i], {{"label", labels_fr[i]}, {"color", colors_f[i]}, {"linestyle", "--"}});
     }
-    
-    plt::title("Task Space Measured Force (f_s)");
+
+    plt::title("Task Space Force Tracking (Translational F_x, F_y, F_z)");
     plt::xlabel("Time [s]");
-    plt::ylabel("Force [N] / Torque [Nm]");
+    plt::ylabel("Force [N]");
+    
+    // Position the legend outside or at a suitable location so it doesn't block the step curves
     plt::legend(); 
     plt::grid(true);
-    plt::save(log_dir_ + "Task_Space_Measured_Force.pdf");
+    
+    // Save to the dynamic directory
+    plt::save(log_dir_ + "Task_Space_Translational_Force.pdf");
 }

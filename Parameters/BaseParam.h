@@ -18,6 +18,7 @@ public:
     std::string urdf_path; // Path to the robot URDF file
     double T; // Sampling period
     int nv;   // Degrees of freedom
+    double run_time; //Total running time in seconds
 
     // ================== Task Space Parameters ==================
     Eigen::MatrixXd M_T, B_T, K_T; 
@@ -34,6 +35,8 @@ public:
     Eigen::VectorXd q_r; // Joint space reference position
     pinocchio::SE3 p_r;  // Task space reference pose
     Eigen::VectorXd f_r; // Task space reference force (6D)
+    Eigen::VectorXd f_r1; // Task space reference force (6D)
+    Eigen::VectorXd f_r2; // Task space reference force (6D)
 
     // Start and target poses for trajectory generation
     pinocchio::SE3 p_rA; 
@@ -80,6 +83,13 @@ public:
 
             T = config["timestep"].as<double>();
             nv = config["nv"].as<int>();
+
+            // Load run time
+            if (config["run_time"]) {
+                run_time = config["run_time"].as<double>();
+            } else {
+                std::cerr << "[Warning] 'run_time' not found in YAML, defaulting to " << run_time << " s.\n";
+            }
 
             // Helper lambda: automatically extracts a Vector
             auto loadVectorXd = [&](const YAML::Node& node) -> Eigen::VectorXd {
@@ -137,6 +147,8 @@ public:
             // Load Reference Parameters
             q_r = loadVectorXd(config["q_r"]);
             f_r = loadVectorXd(config["f_r"]);
+            f_r1 = loadVectorXd(config["f_r1"]);
+            f_r2 = loadVectorXd(config["f_r2"]);
             
             // Use the newly written parseSE3 lambda to parse p_r, p_rA, and p_rB
             parseSE3(config["p_r"], p_r, "p_r");

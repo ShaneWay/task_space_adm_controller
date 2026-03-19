@@ -7,6 +7,8 @@ urdf_path: "../urdf/GEN3_URDF_V12.urdf"
 timestep: 0.001
 # Degrees of freedom of the manipulator (Kinova Gen3)
 nv: 7
+#Total running time for the experiment in seconds
+run_time: 12
 
 # ==========================================
 # Task Space Parameters 
@@ -69,4 +71,6 @@ q_r: [0.00127, 0.49042, 3.14058, 4.91148, 6.28305, 4.99799, 3.14503]
 p_r: [0.5, 0.0, 0.4, 0.0, 0.0, 1.0, 0.0]
 
 # Task space reference force (6D: 3 translation, 3 rotation)
-f_r: [0.0, 0.0, 4.0, 0.0, 0.0, 0.0]
+f_r: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+f_r1: [0.0, 0.0, -6.0, 0.0, 0.0, 0.0]
+f_r2: [0.0, 0.0, -10.0, 0.0, 0.0, 0.0]

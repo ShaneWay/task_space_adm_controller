@@ -27,6 +27,7 @@ private:
     std::vector<std::vector<double>> v_s_;
     std::vector<std::vector<double>> p_r_; 
     std::vector<std::vector<double>> f_s_; // Log for Task-space measured force
+    std::vector<std::vector<double>> f_r_;
 
 public:
     // Initialization and data logging interfaces

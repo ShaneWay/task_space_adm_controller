@@ -61,6 +61,8 @@ void AdmittanceController::init(ControlState& state, const Eigen::VectorXd& q_in
     state.q_r = params_.q_r;
     state.p_r = params_.p_r;
     state.f_r = params_.f_r;
+    state.f_r1 = params_.f_r1;
+    state.f_r2 = params_.f_r2;
     
     state.u_r = Eigen::VectorXd::Zero(params_.nv);
     state.aq_r = Eigen::VectorXd::Zero(params_.nv);
@@ -164,7 +166,7 @@ void AdmittanceController::computeTwoProxies(ControlState& state) {
     Eigen::MatrixXd J_s = MathPre::jacobian(model_, data_, state.q_s, EE_FRAME_ID);
     Eigen::MatrixXd J_x_prv = MathPre::jacobian(model_, data_, state.q_x_prv, EE_FRAME_ID);
 
-    state.f_s = J_s.transpose().jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(state.tau_ext);
+    state.f_s = -J_s.transpose().jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(state.tau_ext);
     
     // 2. Get Jacobian time variation
     Eigen::MatrixXd H_x_prv = MathPre::jacobiansTimeVariation(model_, data_, state.q_x_prv, state.u_x_prv, EE_FRAME_ID);
@@ -234,16 +236,24 @@ Eigen::VectorXd AdmittanceController::update(ControlState& state) {
     std::cout << "=================================================================================|" << std::endl;
     std::cout << "frame : [" << frame << "]" << std::endl; 
     std::cout << "q_s = " << state.q_s.transpose() << std::endl;
-    
+
+    double current_time = frame * params_.T;
    // ==========================================================
     // Execute Experiment III trajectory generation ONLY when config3.yaml is loaded
     // ==========================================================
     if (params_.config_name == "config3") {
         // Use params_.T to get the timestep, ensuring consistency with the configuration file
-        double current_time = frame * params_.T;
+        
         state.updateExperimentIIITrajectory(current_time, params_.p_rA, params_.p_rB);
         // If you need to observe the changes in reference pose, you can uncomment the print statement below:
         // std::cout << "[INFO] config3 Active: Updating Experiment III Trajectory." << std::endl;
+    }
+
+    if (params_.config_name == "config4") {
+        // NEW: Experiment IV: Step force control
+        // Update the reference force f_r periodically (every 5.0 seconds)
+        state.updateExperimentIVForce(current_time, 4.0); 
+        // std::cout << "[INFO] config4 Active: Current Reference Force f_r(z) = " << state.f_r(2) << " N" << std::endl;
     }
 
     state.q_s = unwrapJointAngles(state.q_s);

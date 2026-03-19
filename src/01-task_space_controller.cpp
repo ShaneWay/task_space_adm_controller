@@ -30,7 +30,6 @@ namespace k_api = Kinova::Api;
 #define PORT_REAL_TIME 10001
 constexpr auto TIMEOUT_DURATION = std::chrono::seconds{20};
 
-float TIME_DURATION = 20.0f; // Duration of the control loop in seconds
 constexpr auto TIMEOUT_PROMISE_DURATION = std::chrono::seconds{20};
 
 // Get system time in microseconds
@@ -260,9 +259,9 @@ bool example_admittance_control(k_api::Base::BaseClient* base,
         // ==========================================================
 
         std::vector<int64_t> loop_exec_times;
-        loop_exec_times.reserve(TIME_DURATION * 1000);
+        loop_exec_times.reserve(params.run_time * 1000);
 
-        while (timer_count < (TIME_DURATION * 1000)) {
+        while (timer_count < (params.run_time * 1000)) {
             now = GetTickUs();
 
             if (now - last >= 1000) {

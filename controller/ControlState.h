@@ -40,6 +40,9 @@ public:
     Eigen::VectorXd u_r;      
     Eigen::VectorXd aq_r;     
     Eigen::Matrix<double, 6, 1> f_r; 
+    Eigen::Matrix<double, 6, 1> f_r1; 
+    Eigen::Matrix<double, 6, 1> f_r2; 
+    
     Eigen::Matrix<double, 6, 1> f_s; // Task-space measured force/torque (6D)
 
     void initSizes(int nv) {
@@ -63,7 +66,10 @@ public:
         v_r.setZero();
         a_r.setZero();
         f_r.setZero();
+        f_r1.setZero();
+        f_r2.setZero();
         f_s.setZero();
+        
     }
 
     // ================== Trajectory Generation ==================
@@ -104,6 +110,26 @@ public:
         // 4. Synchronously update the feedforward velocity v_r and acceleration a_r
         this->v_r = s_dot * diff;
         this->a_r = s_ddot * diff;
+    }
+
+    /**
+     * @brief Experiment IV: Generate step-like reference forces
+     * Switches the reference force f_r periodically between 0, f_r1, and f_r2.
+     * @param t             Current running time (s)
+     * @param step_duration Duration for each force stage in seconds
+     */
+    void updateExperimentIVForce(double t, double step_duration = 4.0) {
+        // Divide the time into stages based on the step_duration
+        // E.g., Stage 0: 0 force, Stage 1: f_r1, Stage 2: f_r2
+        int stage = static_cast<int>(t / step_duration) % 3;
+        
+        if (stage == 0) {
+            this->f_r = this->f_r;
+        } else if (stage == 1) {
+            this->f_r = this->f_r1;
+        } else {
+            this->f_r = this->f_r2;
+        }
     }
 };
 

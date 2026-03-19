@@ -3,4 +3,4 @@
 # ==========================================
 # Select the sub-configuration file you want to load here.
 # Options: config1A.yaml, config1B.yaml, config1C.yaml, config1D.yaml, config2.yaml, config3.yaml, etc.
-selected_config: "config2.yaml"
+selected_config: "config4.yaml"
